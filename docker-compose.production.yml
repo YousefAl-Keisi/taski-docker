@@ -1,0 +1,40 @@
+volumes:
+  pg_data_production:
+  static_volume:
+
+services:
+  db:
+    image: postgres:13.10
+    restart: always
+    env_file: .env
+    volumes:
+      - pg_data_production:/var/lib/postgresql/data
+
+  backend:
+    image: vayenteke/taski_backend
+    restart: always
+    env_file: .env
+    depends_on:
+      - db
+    volumes:
+      - static_volume:/backend_static
+
+  frontend:
+    image: vayenteke/taski_frontend
+    env_file: .env
+    depends_on:
+      - backend
+    command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - static_volume:/frontend_static
+
+  gateway:
+    image: vayenteke/taski_gateway
+    restart: always
+    env_file: .env
+    depends_on:
+      - backend
+    volumes:
+      - static_volume:/staticfiles/
+    ports:
+      - "8000:80"
